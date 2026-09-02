@@ -58,24 +58,25 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 		});
 
 		node.addListener(PlayerUseItemEvent.class, event -> {
-			if (event.getItemStack().material() == Material.FIREWORK_ROCKET
+			Material material = event.getItemStack().material();
+			if (material == Material.FIREWORK_ROCKET
 					&& event.getPlayer().isFlyingWithElytra()) {
 				this.useFireworkRocket(event);
 				return;
 			}
 
-			if (event.getItemStack().material() != Material.SNOWBALL
-					&& event.getItemStack().material() != Material.EGG
-					&& event.getItemStack().material() != Material.ENDER_PEARL
-					&& event.getItemStack().material() != Material.WIND_CHARGE)
+			if (material != Material.SNOWBALL
+					&& !isEgg(material)
+					&& material != Material.ENDER_PEARL
+					&& material != Material.WIND_CHARGE)
 				return;
 
 			Player player = event.getPlayer();
 			ItemStack stack = event.getItemStack();
 
-			boolean snowball = stack.material() == Material.SNOWBALL;
-			boolean enderpearl = stack.material() == Material.ENDER_PEARL;
-			boolean windCharge = stack.material() == Material.WIND_CHARGE;
+			boolean snowball = material == Material.SNOWBALL;
+			boolean enderpearl = material == Material.ENDER_PEARL;
+			boolean windCharge = material == Material.WIND_CHARGE;
 
 			SoundEvent soundEvent;
 			CustomEntityProjectile projectile;
@@ -149,4 +150,8 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 			player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));
 		}
 	}
+
+	private boolean isEgg(Material material) {
+        return material == Material.EGG || material == Material.BROWN_EGG || material == Material.BLUE_EGG;
+    }
 }

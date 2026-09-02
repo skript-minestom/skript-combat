@@ -12,6 +12,7 @@ import io.github.togar2.pvp.feature.config.FeatureConfiguration;
 import io.github.togar2.pvp.feature.explosion.ExplosionFeature.IgnitionCause.ByPlayer;
 import io.github.togar2.pvp.feature.item.ItemDamageFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.Sound.Source;
@@ -28,6 +29,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerUseItemOnBlockEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
@@ -309,7 +311,7 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
         var firePosition = position.relative(event.getBlockFace());
         if (!this.canPlaceFireAt(instance, firePosition)) return;
 
-        this.playIgnitionSound(player, stack.material(), firePosition);
+        this.playIgnitionSound(player, stack.material(), firePosition, instance);
         instance.setBlock(firePosition, this.createFireBlock(instance, firePosition));
         this.useIgnitionItem(player, event.getHand(), stack);
     }
@@ -321,7 +323,7 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
     private boolean lightBlock(Instance instance, Point position, Block block, Material material, Player player) {
         if (!this.canLight(block)) return false;
 
-        this.playIgnitionSound(player, material, position);
+        this.playIgnitionSound(player, material, position, instance);
         instance.setBlock(position, block.withProperty("lit", "true"));
         return true;
     }
@@ -435,17 +437,20 @@ public class VanillaExplosiveFeature implements ExplosiveFeature, RegistrableFea
         }
     }
 
-    private void playIgnitionSound(Player player, Material material, Point position) {
+    private void playIgnitionSound(Player player, Material material, Point position, Instance instance) {
         var random = ThreadLocalRandom.current();
         var soundEvent = material == Material.FLINT_AND_STEEL
                 ? SoundEvent.ITEM_FLINTANDSTEEL_USE : SoundEvent.ITEM_FIRECHARGE_USE;
         var pitch = material == Material.FLINT_AND_STEEL
                 ? random.nextFloat() * 0.4F + 0.8F : (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F;
 
-        ViewUtil.packetGroup(player).playSound(Sound.sound(
-                soundEvent, Source.BLOCK,
-                1.0F, pitch
-        ), position);
+		Chunk chunk = instance.getChunkAt(position);
+		Audience audience = chunk == null ? player : chunk.getViewersAsAudience();
+		if (material == Material.FLINT_AND_STEEL) audience = audience.filterAudience(a -> a != player);
+		audience.playSound(Sound.sound(
+			soundEvent, Source.BLOCK,
+			1.0F, pitch
+		), position.x(), position.y(), position.z());
     }
 
 	private boolean shouldSuppressBedUse(Player player) {
