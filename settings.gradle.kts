@@ -1,1 +1,1 @@
-rootProject.name = "pvp"
+rootProject.name = "skript-combat"

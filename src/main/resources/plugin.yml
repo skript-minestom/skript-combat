@@ -1,0 +1,7 @@
+name: skript-combat
+main: com.github.hapily04.skriptcombat.SkriptCombat
+version: ${version}
+api-version: 1.13
+depend: [Skript]
+authors: [hapily]
+website: https://github.com/skript-minestom/skript-combat

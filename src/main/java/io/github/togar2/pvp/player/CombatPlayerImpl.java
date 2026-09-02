@@ -1,5 +1,6 @@
 package io.github.togar2.pvp.player;
 
+import com.github.hapily04.skriptminestom.luckperms.LuckPermsPlayer;
 import io.github.togar2.pvp.utils.BlockUtil;
 import io.github.togar2.pvp.utils.ChunkBlockGetter;
 import io.github.togar2.pvp.utils.CollisionUtil;
@@ -7,13 +8,13 @@ import io.github.togar2.pvp.utils.FluidUtil;
 import io.github.togar2.pvp.utils.FluidUtil.FluidHeights;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
+import net.luckperms.api.LuckPerms;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.collision.Aerodynamics;
 import io.github.togar2.pvp.collision.PhysicsResult;
 import net.minestom.server.collision.PhysicsUtils;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventDispatcher;
@@ -29,14 +30,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
 
-public class CombatPlayerImpl extends Player implements CombatPlayer {
+public class CombatPlayerImpl extends LuckPermsPlayer implements CombatPlayer {
 	private boolean velocityUpdate = false;
 	private boolean horizontalCollision = false;
 	private PhysicsResult previousPhysicsResult = null;
 	private Vec stuckSpeedMultiplier = Vec.ZERO;
 
-	public CombatPlayerImpl(@NotNull PlayerConnection playerConnection, GameProfile profile) {
-		super(playerConnection, profile);
+	public CombatPlayerImpl(@Nullable LuckPerms luckPerms, @NotNull PlayerConnection connection, @NotNull GameProfile profile) {
+		super(luckPerms, connection, profile);
 	}
 
 	@Override

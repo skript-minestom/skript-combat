@@ -80,9 +80,9 @@ public class MinestomPvP {
 
 		CombatPlayer.init(MinecraftServer.getGlobalEventHandler());
 
-		if (player) {
-			MinecraftServer.getConnectionManager().setPlayerProvider(CombatPlayerImpl::new);
-		}
+//		if (player) {
+//			MinecraftServer.getConnectionManager().setPlayerProvider(CombatPlayerImpl::new);
+//		}
 
 		if (keepAlive) {
 			MinecraftServer.getPacketListenerManager().setPlayListener(ClientKeepAlivePacket.class, AccurateLatencyListener::listener);
