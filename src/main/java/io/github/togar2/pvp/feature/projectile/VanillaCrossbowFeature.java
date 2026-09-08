@@ -384,12 +384,9 @@ public class VanillaCrossbowFeature implements CrossbowFeature, RegistrableFeatu
 	private void shootProjectileEntity(CustomEntityProjectile projectileEntity, Player player, Pos position,
 	                                   float yaw, double power, double spread) {
 		var shotVector = this.getProjectileShotVector(player.getPosition(), yaw);
-		projectileEntity.shoot(shotVector.x(), shotVector.y(), shotVector.z(), power, spread);
-		var spawnFuture = projectileEntity.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(projectileEntity.getPosition()));
-
-		if (spawnFuture != null) {
-			spawnFuture.thenRun(() -> projectileEntity.setVelocity(projectileEntity.getVelocity()));
-		}
+		projectileEntity.shootAndLaunch(
+				Objects.requireNonNull(player.getInstance()), position,
+				shotVector.x(), shotVector.y(), shotVector.z(), power, spread, player);
 	}
 
 	private Vec getProjectileShotVector(Pos position, float angle) {

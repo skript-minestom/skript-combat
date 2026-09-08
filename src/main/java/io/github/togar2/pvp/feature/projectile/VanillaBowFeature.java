@@ -14,7 +14,6 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.*;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.item.PlayerBeginItemUseEvent;
@@ -131,11 +130,8 @@ public class VanillaBowFeature implements BowFeature, RegistrableFeature {
 
 			// Arrow shooting
 			Pos position = player.getPosition().add(0D, player.getEyeHeight() - 0.1, 0D);
-			arrow.shootFromRotation(position.pitch(), position.yaw(), 0 , power * 3, 1.0);
-			Vec playerVel = player.getVelocity();
-			arrow.setVelocity(arrow.getVelocity().add(playerVel.x(),
-					player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
-			arrow.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(arrow.getPosition()));
+			arrow.shootFromRotationAndLaunch(
+					Objects.requireNonNull(player.getInstance()), position, 0, power * 3, 1.0, player);
 
 			ThreadLocalRandom random = ThreadLocalRandom.current();
 			ViewUtil.viewersAndSelf(player).playSound(Sound.sound(

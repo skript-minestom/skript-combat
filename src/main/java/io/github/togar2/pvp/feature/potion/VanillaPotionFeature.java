@@ -14,7 +14,6 @@ import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerHand;
@@ -143,12 +142,8 @@ public class VanillaPotionFeature implements PotionFeature, RegistrableFeature {
 		thrownPotion.setItem(stack);
 
 		Pos position = player.getPosition().add(0, player.getEyeHeight(), 0);
-		thrownPotion.shootFromRotation(position.pitch(), position.yaw(), -20, 0.5, 1.0);
-		thrownPotion.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(thrownPotion.getPosition()));
-
-		Vec playerVel = player.getVelocity();
-		thrownPotion.setVelocity(thrownPotion.getVelocity().add(playerVel.x(),
-				player.isOnGround() ? 0.0 : playerVel.y(), playerVel.z()));
+		thrownPotion.shootFromRotationAndLaunch(
+				Objects.requireNonNull(player.getInstance()), position, -20, 0.5, 1.0, player);
 
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			player.setItemInHand(hand, stack.withAmount(stack.amount() - 1));

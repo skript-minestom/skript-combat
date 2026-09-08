@@ -20,6 +20,7 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEve
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent;
 import net.minestom.server.event.entity.projectile.ProjectileUncollideEvent;
 import net.minestom.server.instance.Chunk;
+import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -149,6 +150,65 @@ public class CustomEntityProjectile extends Entity {
 				(float) Math.toDegrees(Math.atan2(dx, dz)),
 				(float) Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)))
 		);
+	}
+
+	/**
+	 * Spawns this projectile and applies its launch velocity.
+	 * Call after {@link #shoot(double, double, double, double, double)} or {@link #shootFromRotation}.
+	 * <p>
+	 * {@code shoot*} only writes the velocity field; clients need {@link #setVelocity(Vec)} after
+	 * (and often again after) {@link #setInstance} for correct spawn/sync packets.
+	 *
+	 * @param instance the instance to spawn into
+	 * @param spawnPosition eye/spawn position; view is taken from this projectile after shoot
+	 * @param inheritVelocityFrom if non-null, adds that entity's velocity (Y only when not on ground)
+	 * @return the setInstance future
+	 */
+	public CompletableFuture<Void> launchInto(@NotNull Instance instance, @NotNull Pos spawnPosition,
+	                                          @Nullable Entity inheritVelocityFrom) {
+		Vec velocity = this.getVelocity();
+		if (inheritVelocityFrom != null) {
+			Vec other = inheritVelocityFrom.getVelocity();
+			velocity = velocity.add(
+					other.x(),
+					inheritVelocityFrom.isOnGround() ? 0.0 : other.y(),
+					other.z()
+			);
+		}
+
+		// Bow order: setVelocity before setInstance so spawn packets see launch speed.
+		// Re-apply after async spawn so late viewers get an EntityVelocityPacket.
+		this.setVelocity(velocity);
+		Vec launchVelocity = velocity;
+		Pos spawn = spawnPosition.withView(this.getPosition());
+		CompletableFuture<Void> future = this.setInstance(instance, spawn);
+		if (future == null) {
+			// AddEntityToInstanceEvent cancelled — entity never entered the instance.
+			return CompletableFuture.failedFuture(
+					new IllegalStateException("Failed to add projectile to instance (spawn cancelled)"));
+		}
+		future.thenRun(() -> this.setVelocity(launchVelocity));
+		return future;
+	}
+
+	/**
+	 * {@link #shootFromRotation} then {@link #launchInto}.
+	 */
+	public CompletableFuture<Void> shootFromRotationAndLaunch(@NotNull Instance instance, @NotNull Pos spawnPosition,
+	                                                          float yBias, double power, double spread,
+	                                                          @Nullable Entity inheritVelocityFrom) {
+		this.shootFromRotation(spawnPosition.pitch(), spawnPosition.yaw(), yBias, power, spread);
+		return this.launchInto(instance, spawnPosition, inheritVelocityFrom);
+	}
+
+	/**
+	 * {@link #shoot(double, double, double, double, double)} then {@link #launchInto}.
+	 */
+	public CompletableFuture<Void> shootAndLaunch(@NotNull Instance instance, @NotNull Pos spawnPosition,
+	                                              double dx, double dy, double dz, double power, double spread,
+	                                              @Nullable Entity inheritVelocityFrom) {
+		this.shoot(dx, dy, dz, power, spread);
+		return this.launchInto(instance, spawnPosition, inheritVelocityFrom);
 	}
 
 	private void shoot(@NotNull Pos from, @NotNull Point to, double power, double spread) {

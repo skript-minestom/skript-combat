@@ -17,8 +17,6 @@ public class SkriptCombat extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        MinecraftServer.getGlobalEventHandler().addChild(MinestomPvP.events());
-
         MinestomPvP.init(false, true);
 
         MinecraftServer.getConnectionManager().setPlayerProvider(

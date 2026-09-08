@@ -1,11 +1,14 @@
 package io.github.togar2.pvp.potion.item;
 
+import io.github.togar2.pvp.utils.CombatVersion;
 import io.github.togar2.pvp.utils.PotionFlags;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.potion.PotionType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CombatPotionTypes {
@@ -13,6 +16,39 @@ public class CombatPotionTypes {
 
 	public static CombatPotionType get(PotionType potionType) {
 		return POTION_EFFECTS.get(potionType);
+	}
+
+	/**
+	 * Vanilla drinkable-potion duration for the given effect and amplifier, if any.
+	 * Prefers non-{@code long_} potion types and single-effect entries over multi-effect ones
+	 * (e.g. strong slowness over turtle master).
+	 */
+	public static @Nullable Integer defaultDuration(PotionEffect effect, int amplifier) {
+		Integer bestDuration = null;
+		int bestScore = Integer.MIN_VALUE;
+
+		for (CombatPotionType combatType : POTION_EFFECTS.values()) {
+			List<Potion> effects = combatType.getEffects(CombatVersion.MODERN);
+			Potion match = null;
+			for (Potion potion : effects) {
+				if (potion.effect() == effect && potion.amplifier() == amplifier) {
+					match = potion;
+					break;
+				}
+			}
+			if (match == null) continue;
+
+			String key = combatType.getPotionType().key().value();
+			boolean isLong = key.startsWith("long_");
+			boolean singleEffect = effects.size() == 1;
+			// Prefer non-long, then single-effect potion bottles.
+			int score = (isLong ? 0 : 2) + (singleEffect ? 1 : 0);
+			if (score > bestScore) {
+				bestScore = score;
+				bestDuration = match.duration();
+			}
+		}
+		return bestDuration;
 	}
 
 	public static void register(CombatPotionType... potionTypes) {

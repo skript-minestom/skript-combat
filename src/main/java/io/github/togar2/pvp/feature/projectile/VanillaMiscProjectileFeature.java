@@ -10,7 +10,6 @@ import io.github.togar2.pvp.feature.fall.FallFeature;
 import io.github.togar2.pvp.utils.ViewUtil;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventNode;
@@ -110,13 +109,8 @@ public class VanillaMiscProjectileFeature implements MiscProjectileFeature, Regi
 			}
 
 			Pos position = player.getPosition().add(0, player.getEyeHeight() - 0.1D, 0);
-			projectile.shootFromRotation(position.pitch(), position.yaw(), 0, 1.5, 1.0);
-
-			Vec playerVel = player.getVelocity();
-			projectile.setVelocity(projectile.getVelocity().add(playerVel.x(),
-					player.isOnGround() ? 0.0D : playerVel.y(), playerVel.z()));
-			projectile.setInstance(Objects.requireNonNull(player.getInstance()), position.withView(projectile.getPosition()))
-					.thenRun(() -> projectile.setVelocity(projectile.getVelocity()));
+			projectile.shootFromRotationAndLaunch(
+					Objects.requireNonNull(player.getInstance()), position, 0, 1.5, 1.0, player);
 
 			if (player.getGameMode() != GameMode.CREATIVE) {
 				player.setItemInHand(event.getHand(), stack.withAmount(stack.amount() - 1));

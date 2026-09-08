@@ -176,8 +176,6 @@ public class FluidUtil {
 		var instance = entity.getInstance();
 
 		if (instance == null) return false;
-		if (!instance.getWeather().isRaining()) return false;
-		if (!hasOpenSky(instance)) return false;
 
 		var position = entity.getPosition();
 
@@ -189,8 +187,11 @@ public class FluidUtil {
 	}
 
 	public static boolean isRainingAt(Instance instance, int blockX, int blockY, int blockZ) {
-		var chunk = instance.getChunkAt(blockX, blockZ);
+		if (!instance.getWeather().isRaining()) return false;
+		if (!hasOpenSky(instance)) return false;
+		if (!instance.getWeather().isRaining()) return false;
 
+		var chunk = instance.getChunkAt(blockX, blockZ);
 		if (chunk == null) return false;
 
 		var localBlockX = CoordConversion.globalToSectionRelative(blockX);

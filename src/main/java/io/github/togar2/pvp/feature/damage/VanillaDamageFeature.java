@@ -280,13 +280,14 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 		if (hurtSoundAndAnimation) {
 			// Play sound (copied from Minestom, because of complications with cancelling)
 			if (sound != null) {
-				var random = ThreadLocalRandom.current();
-				var pitch = (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F;
-				entity.sendPacketToViewersAndSelf(new SoundEffectPacket(
-						sound, entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
-						entity.getPosition(),
-						1.0F, pitch, random.nextLong()
-				));
+				event.setSound(sound);
+//				var random = ThreadLocalRandom.current();
+//				var pitch = (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F;
+//				entity.sendPacketToViewersAndSelf(new SoundEffectPacket(
+//						sound, entity instanceof Player ? Sound.Source.PLAYER : Sound.Source.HOSTILE,
+//						entity.getPosition(),
+//						1.0F, pitch, random.nextLong()
+//				));
 			}
 
 			if (damage.getType().equals(DamageType.THORNS)) {
@@ -297,7 +298,7 @@ public class VanillaDamageFeature implements DamageFeature, RegistrableFeature {
 						1.0F, 1.0F, ThreadLocalRandom.current().nextLong()
 				));
 			}
-		}
+		} else event.setSound(null);
 
 		damage.setAmount(amount);
 
