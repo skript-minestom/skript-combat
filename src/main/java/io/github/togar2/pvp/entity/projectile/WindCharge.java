@@ -25,33 +25,33 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class WindCharge extends CustomEntityProjectile {
-	private static final double RADIUS = 1.2;
-	private static final double KNOCKBACK_MULTIPLIER = 1.22;
-	private static final float DIRECT_DAMAGE = 1.0F;
-	private static final int NO_DEFLECT_TICKS = 5;
+    private static final double RADIUS = 1.2;
+    private static final double KNOCKBACK_MULTIPLIER = 1.22;
+    private static final float DIRECT_DAMAGE = 1.0F;
+    private static final int NO_DEFLECT_TICKS = 5;
 
-	private final FallFeature fallFeature;
-	private int noDeflectTicks = NO_DEFLECT_TICKS;
+    private final FallFeature fallFeature;
+    private int noDeflectTicks = NO_DEFLECT_TICKS;
 
-	public WindCharge(@Nullable Entity shooter, FallFeature fallFeature) {
-		super(shooter, EntityType.WIND_CHARGE);
-		this.fallFeature = fallFeature;
+    public WindCharge(@Nullable Entity shooter, FallFeature fallFeature) {
+        super(shooter, EntityType.WIND_CHARGE);
+        this.fallFeature = fallFeature;
 
-		this.setNoGravity(true);
-		this.setAerodynamics(new Aerodynamics(0.0, 1.0, 1.0));
-	}
+        this.setNoGravity(true);
+        this.setAerodynamics(new Aerodynamics(0.0, 1.0, 1.0));
+    }
 
-	@Override
-	public void tick(long time) {
-		super.tick(time);
+    @Override
+    public void tick(long time) {
+        super.tick(time);
 
-		if (this.noDeflectTicks > 0) {
-			this.noDeflectTicks--;
-		}
-	}
+        if (this.noDeflectTicks > 0) {
+            this.noDeflectTicks--;
+        }
+    }
 
-	public boolean deflect(Entity entity) {
-		if (this.noDeflectTicks > 0) return false;
+    public boolean deflect(Entity entity) {
+        if (this.noDeflectTicks > 0) return false;
 
 		var direction = entity.getPosition().direction();
 		this.setShooter(entity);
@@ -61,33 +61,33 @@ public final class WindCharge extends CustomEntityProjectile {
 			(float) Math.toDegrees(Math.atan2(direction.y(), Math.sqrt(direction.x() * direction.x() + direction.z() * direction.z())))
 		);
 
-		return true;
-	}
+        return true;
+    }
 
-	@Override
-	public boolean onHit(Entity entity) {
-		if (entity instanceof LivingEntity livingEntity) {
-			var damage = new Damage(DamageType.WIND_CHARGE, this, this.getShooter(), null, DIRECT_DAMAGE);
-			livingEntity.damage(damage);
-		}
+    @Override
+    public boolean onHit(Entity entity) {
+        if (entity instanceof LivingEntity livingEntity) {
+            var damage = new Damage(DamageType.WIND_CHARGE, this, this.getShooter(), null, DIRECT_DAMAGE);
+            livingEntity.damage(damage);
+        }
 
-		this.explode(this.getPosition());
+        this.explode(this.getPosition());
 
-		return true;
-	}
+        return true;
+    }
 
-	@Override
-	public boolean onStuck() {
-		var position = this.getPosition();
+    @Override
+    public boolean onStuck() {
+        var position = this.getPosition();
 
-		if (this.collisionDirection != null) {
-			position = position.sub(this.collisionDirection.mul(0.25));
-		}
+        if (this.collisionDirection != null) {
+            position = position.sub(this.collisionDirection.mul(0.25));
+        }
 
-		this.explode(position);
+        this.explode(position);
 
-		return true;
-	}
+        return true;
+    }
 
 	@Override
 	protected boolean canHit(Entity entity) {
@@ -96,10 +96,10 @@ public final class WindCharge extends CustomEntityProjectile {
 			&& super.canHit(entity);
 	}
 
-	private void explode(Point center) {
-		var instance = this.getInstance();
+    private void explode(Point center) {
+        var instance = this.getInstance();
 
-		if (instance == null) return;
+        if (instance == null) return;
 
 		var doubleRadius = RADIUS * 2.0;
 		var centerVector = center.asVec();
@@ -128,7 +128,7 @@ public final class WindCharge extends CustomEntityProjectile {
 	private boolean applyExplosionKnockback(Point center, Vec centerVector, double doubleRadius, int ticksPerSecond, Entity entity) {
 		if (entity == this) return false;
 
-		var distanceStrength = entity.getPosition().distance(center) / doubleRadius;
+        var distanceStrength = entity.getPosition().distance(center) / doubleRadius;
 
 		if (distanceStrength > 1.0) return false;
 
@@ -142,12 +142,12 @@ public final class WindCharge extends CustomEntityProjectile {
 
 		if (directionLength == 0.0) return false;
 
-		var exposure = this.hasLineOfSight(centerVector, entity) ? 1.0 : 0.0;
-		var knockback = (1.0 - distanceStrength) * exposure * KNOCKBACK_MULTIPLIER;
+        var exposure = this.hasLineOfSight(centerVector, entity) ? 1.0 : 0.0;
+        var knockback = (1.0 - distanceStrength) * exposure * KNOCKBACK_MULTIPLIER;
 
-		if (entity instanceof LivingEntity livingEntity) {
-			knockback *= 1.0 - livingEntity.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
-		}
+        if (entity instanceof LivingEntity livingEntity) {
+            knockback *= 1.0 - livingEntity.getAttributeValue(Attribute.EXPLOSION_KNOCKBACK_RESISTANCE);
+        }
 
 		if (knockback <= 0.0) return false;
 
@@ -166,17 +166,22 @@ public final class WindCharge extends CustomEntityProjectile {
 		return true;
 	}
 
-	private boolean hasLineOfSight(Vec center, Entity entity) {
-		var basePosition = entity.getPosition();
+    private boolean hasLineOfSight(Vec center, Entity entity) {
+        var basePosition = entity.getPosition();
 
-		for (var testStep = 0; testStep < 2; testStep++) {
-			var targetPosition = basePosition.add(0.0, entity.getBoundingBox().height() * 0.5 * testStep, 0.0);
+        for (var testStep = 0; testStep < 2; testStep++) {
+            var targetPosition = basePosition.add(0.0, entity.getBoundingBox().height() * 0.5 * testStep, 0.0);
 
-			if (VanillaExplosionSupplier.noBlocking(entity.getInstance(), center, targetPosition)) {
-				return true;
-			}
-		}
+            if (VanillaExplosionSupplier.noBlocking(entity.getInstance(), center, targetPosition)) {
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
+
+    @Override
+    protected int getUpdateInterval() {
+        return 10;
+    }
 }
