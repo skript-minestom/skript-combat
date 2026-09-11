@@ -22,6 +22,7 @@ import net.minestom.server.event.entity.projectile.ProjectileUncollideEvent;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.EntityTeleportPacket;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -323,7 +324,7 @@ public class CustomEntityProjectile extends Entity {
                     this.setNoGravity(true);
                     this.setVelocity(Vec.ZERO);
                     this.collisionDirection = collisionDirection;
-                    this.refreshPosition(this.position.withCoord(physicsResult.newPosition()), this.noClip, true);
+                    this.refreshPosition(this.position.withCoord(physicsResult.newPosition()), this.noClip, false);
 
                     if (this.onStuck(event)) {
                         this.scheduler().scheduleNextProcess(this::remove);
@@ -333,22 +334,23 @@ public class CustomEntityProjectile extends Entity {
 
             this.onGround = physicsResult.isOnGround();
 
-            var yaw = this.position.yaw();
-            var pitch = this.position.pitch();
+            var yawSign = this.noClip ? -1.0 : 1.0;
+            var yaw = (float) Math.toDegrees(Math.atan2(yawSign * diff.x(), yawSign * diff.z()));
+            var pitch = (float) Math.toDegrees(
+                    Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
 
-            if (!this.noClip) {
-                yaw = (float) Math.toDegrees(Math.atan2(diff.x(), diff.z()));
-                pitch = (float) Math.toDegrees(
-                        Math.atan2(diff.y(), Math.sqrt(diff.x() * diff.x() + diff.z() * diff.z())));
-
-                yaw = lerp(this.prevYaw, yaw);
-                pitch = lerp(this.prevPitch, pitch);
-            }
+            yaw = Pos.fixYaw(lerpRotation(this.prevYaw, yaw));
+            pitch = lerpRotation(this.prevPitch, pitch);
 
             this.prevYaw = yaw;
             this.prevPitch = pitch;
 
-            this.refreshPosition(newPosition.withView(yaw, pitch), this.noClip, this.isStuck());
+            this.refreshPosition(newPosition.withView(yaw, pitch), false, this.isStuck());
+
+            if (this.isStuck()) {
+                this.sendPacketToViewers(new EntityTeleportPacket(this.getEntityId(), this.position,
+                        Vec.ZERO, RelativeFlags.DELTA_COORD, this.isOnGround()));
+            }
 
             if (!this.shouldUpdateVelocityBeforeMovement()) {
                 this.updateVelocityAfterMovement();
@@ -408,8 +410,16 @@ public class CustomEntityProjectile extends Entity {
                 || minZ > ownerPosition.z() + ownerBox.maxZ();
     }
 
-    private static float lerp(float first, float second) {
-        return first + (second - first) * 0.2F;
+    private static float lerpRotation(float previousRotation, float rotation) {
+        while (rotation - previousRotation < -180.0F) {
+            previousRotation -= 360.0F;
+        }
+
+        while (rotation - previousRotation >= 180.0F) {
+            previousRotation += 360.0F;
+        }
+
+        return previousRotation + (rotation - previousRotation) * 0.2F;
     }
 
     @Override
